@@ -30,19 +30,19 @@ class FakeCallModelHelper {
     static func dialCallModel(caller:TestUser,callee:TestUser,otherParticipantUsers:[TestUser]? = nil) -> CallModel {
         let locusUrl = FakeCallModelHelper.getLocusUrl()
         
-        let myselfModel = getParticipant(userInfo: caller, userState: CallMembership.State.joined, isSelfModel: true, isCreater: true)
+        let myselfModel = getParticipant(userInfo: caller, userState: ParticipantModel.State.joined, isSelfModel: true, isCreater: true)
         
         let host = getPersonModel(testUser: caller)
         
-        let callerParticipantModel = getParticipant(userInfo: caller, userState: CallMembership.State.joined, isCreater: true,deviceUrl: myselfModel.deviceUrl)
-        let calleeParticipantModel = getParticipant(userInfo: callee, userState: CallMembership.State.idle, isCreater: false)
+        let callerParticipantModel = getParticipant(userInfo: caller, userState: ParticipantModel.State.joined, isCreater: true,deviceUrl: myselfModel.deviceUrl)
+        let calleeParticipantModel = getParticipant(userInfo: callee, userState: ParticipantModel.State.idle, isCreater: false)
         
         var participants :[ParticipantModel] = [callerParticipantModel,calleeParticipantModel]
         if let otherUser = otherParticipantUsers {
             for testUser in otherUser {
-                var state:CallMembership.State
+                var state:ParticipantModel.State
                 var isCreator: Bool = false
-                state = CallMembership.State.idle
+                state = ParticipantModel.State.idle
                 isCreator = false
                 let participant = getParticipant(userInfo: testUser, userState: state, isCreater: isCreator)
                 participants.append(participant)
@@ -64,7 +64,7 @@ class FakeCallModelHelper {
             var participants:[ParticipantModel] = []
             for var participant in callModel.participants! {
                 if participant.person!.id == callee.id {
-                    participant.state = CallMembership.State.left
+                    participant.state = ParticipantModel.State.left
                 }
                 participants.append(participant)
             }
@@ -85,13 +85,13 @@ class FakeCallModelHelper {
         
         if mySelf?.person?.id == hanupUser.id {
             mySelf?.status = getParticipantStatus(participantState: .left,csi: hanupUser.csi)
-            mySelf?.state = CallMembership.State.left
+            mySelf?.state = ParticipantModel.State.left
             newModel.setMyself(newParticipant:mySelf)
         }
         
         for var participant in newModel.participants! {
             if participant.person?.id == hanupUser.id {
-                participant.state = CallMembership.State.left
+                participant.state = ParticipantModel.State.left
                 participant.status = getParticipantStatus(participantState: .left,csi: hanupUser.csi)
             }
             participants.append(participant)
@@ -107,7 +107,7 @@ class FakeCallModelHelper {
     static func initCallModel(caller:TestUser,allParticipantUsers:[TestUser],selfUser:TestUser) -> CallModel {
         //self part
         let isCreator = caller.id == selfUser.id ? true:false
-        let selfState = caller.id == selfUser.id ? CallMembership.State.joined:CallMembership.State.idle
+        let selfState = caller.id == selfUser.id ? ParticipantModel.State.joined:ParticipantModel.State.idle
         let mySelf = getParticipant(userInfo: selfUser,userState: selfState,isSelfModel: true, isCreater: isCreator)
         
         //caller part
@@ -120,14 +120,14 @@ class FakeCallModelHelper {
         var participants:[ParticipantModel] = []
         
         for testUser in allParticipantUsers {
-            var state:CallMembership.State
+            var state:ParticipantModel.State
             var isCreator: Bool = false
             if testUser.id == caller.id {
                 isCreator = true
-                state = CallMembership.State.joined
+                state = ParticipantModel.State.joined
             }
             else {
-                state = CallMembership.State.idle
+                state = ParticipantModel.State.idle
                 isCreator = false
             }
             let participant = getParticipant(userInfo: testUser, userState: state, isCreater: isCreator)
@@ -147,10 +147,10 @@ class FakeCallModelHelper {
         var mySelf = newModel.myself
         var participants:[ParticipantModel] = []
         if mySelf?.person?.id == answerUser.id {
-            mySelf?.state = CallMembership.State.joined
-            mySelf?.status = getParticipantStatus(participantState: CallMembership.State.joined,csi: answerUser.csi)
+            mySelf?.state = ParticipantModel.State.joined
+            mySelf?.status = getParticipantStatus(participantState: ParticipantModel.State.joined,csi: answerUser.csi)
             mySelf?.deviceUrl = Config.FakeSelfDeviceUrl
-            mySelf?.devices = getParticipantDevice(participantState: CallMembership.State.joined, isSelfModel: true, deviceUrl: Config.FakeSelfDeviceUrl)
+            mySelf?.devices = getParticipantDevice(participantState: ParticipantModel.State.joined, isSelfModel: true, deviceUrl: Config.FakeSelfDeviceUrl)
             newModel.setMyself(newParticipant:mySelf)
         }
         
@@ -177,16 +177,16 @@ class FakeCallModelHelper {
         var participants:[ParticipantModel] = []
         
         if mySelf?.person?.id == declineUser.id {
-            mySelf?.state = CallMembership.State.declined
-            mySelf?.status = getParticipantStatus(participantState: CallMembership.State.declined,csi: declineUser.csi)
+            mySelf?.state = ParticipantModel.State.declined
+            mySelf?.status = getParticipantStatus(participantState: ParticipantModel.State.declined,csi: declineUser.csi)
             mySelf?.deviceUrl = Config.FakeSelfDeviceUrl
             newModel.setMyself(newParticipant:mySelf)
         }
         
         for var participant in newModel.participants! {
             if participant.person?.id == declineUser.id {
-                participant.state = CallMembership.State.declined
-                participant.status = getParticipantStatus(participantState: CallMembership.State.declined,csi: declineUser.csi)
+                participant.state = ParticipantModel.State.declined
+                participant.status = getParticipantStatus(participantState: ParticipantModel.State.declined,csi: declineUser.csi)
             }
             participants.append(participant)
         }
@@ -202,10 +202,10 @@ class FakeCallModelHelper {
         var mySelf = newModel.myself
         var participants:[ParticipantModel] = []
         if mySelf?.person?.id == alertUser.id {
-            mySelf?.state = CallMembership.State.notified
+            mySelf?.state = ParticipantModel.State.notified
             mySelf?.status = getParticipantStatus(participantState: .notified,csi: alertUser.csi)
             mySelf?.deviceUrl = Config.FakeSelfDeviceUrl
-            mySelf?.devices = getParticipantDevice(participantState: CallMembership.State.notified, isSelfModel: true, deviceUrl: Config.FakeSelfDeviceUrl)
+            mySelf?.devices = getParticipantDevice(participantState: ParticipantModel.State.notified, isSelfModel: true, deviceUrl: Config.FakeSelfDeviceUrl)
             newModel.setMyself(newParticipant:mySelf)
         }
         
@@ -213,7 +213,7 @@ class FakeCallModelHelper {
             if participant.person?.id == alertUser.id {
                 participant.state = .notified
                 participant.deviceUrl = getDeviceUrl(isSelfModel: participant.person?.id == mySelf?.person?.id, userState: .joined,deviceUrl: participant.deviceUrl)
-                participant.devices = getParticipantDevice(participantState: CallMembership.State.notified, isSelfModel: false, deviceUrl: participant.deviceUrl)
+                participant.devices = getParticipantDevice(participantState: ParticipantModel.State.notified, isSelfModel: false, deviceUrl: participant.deviceUrl)
                 participant.status = getParticipantStatus(participantState: .notified,csi: alertUser.csi)
             }
             participants.append(participant)
@@ -349,7 +349,7 @@ class FakeCallModelHelper {
                                   "orgId" : testUser.orgId])!
     }
     
-    private static func getParticipantStatus(participantState:CallMembership.State,csi:[UInt]) -> ParticipantModel.StatusModel {
+    private static func getParticipantStatus(participantState:ParticipantModel.State,csi:[UInt]) -> ParticipantModel.StatusModel {
         var statusModel :ParticipantModel.StatusModel?
         switch participantState {
         case .idle:
@@ -370,7 +370,7 @@ class FakeCallModelHelper {
         return statusModel!
     }
     
-    private static func getParticipantDevice(participantState:CallMembership.State,isSelfModel:Bool = false,deviceUrl:String?) -> [ParticipantModel.DeviceModel] {
+    private static func getParticipantDevice(participantState:ParticipantModel.State,isSelfModel:Bool = false,deviceUrl:String?) -> [ParticipantModel.DeviceModel] {
         
         var deviceModels:[ParticipantModel.DeviceModel] = []
         var deviceModel:ParticipantModel.DeviceModel? = nil
@@ -450,7 +450,7 @@ class FakeCallModelHelper {
         return [whiteboard,screenShare]
     }
     
-    private static func getAlertHintModel(userState:CallMembership.State,isCreater:Bool,isSeflModel:Bool) ->AlertHintModel? {
+    private static func getAlertHintModel(userState:ParticipantModel.State,isCreater:Bool,isSeflModel:Bool) ->AlertHintModel? {
         guard isSeflModel == true else {
             return nil
         }
@@ -471,7 +471,7 @@ class FakeCallModelHelper {
         return alertHint
     }
     
-    private static func getAlertTypeModel(userState:CallMembership.State,isCreater:Bool,isSeflModel:Bool) ->AlertTypeModel? {
+    private static func getAlertTypeModel(userState:ParticipantModel.State,isCreater:Bool,isSeflModel:Bool) ->AlertTypeModel? {
         guard isSeflModel == true else {
             return nil
         }
@@ -490,7 +490,7 @@ class FakeCallModelHelper {
         return alertType
     }
     
-    private static func getDeviceUrl(isSelfModel:Bool,userState:CallMembership.State,deviceUrl:String? = nil) -> String? {
+    private static func getDeviceUrl(isSelfModel:Bool,userState:ParticipantModel.State,deviceUrl:String? = nil) -> String? {
         var result: String? = nil
         switch userState {
         case .joined:
@@ -506,7 +506,7 @@ class FakeCallModelHelper {
         return result
     }
     
-    private static func getParticipant(userInfo:TestUser,userState:CallMembership.State,isSelfModel:Bool = false,isCreater:Bool,deviceUrl:String? = nil) -> ParticipantModel {
+    private static func getParticipant(userInfo:TestUser,userState:ParticipantModel.State,isSelfModel:Bool = false,isCreater:Bool,deviceUrl:String? = nil) -> ParticipantModel {
         let personModel = getPersonModel(testUser: userInfo)
         let userModelStatus = getParticipantStatus(participantState: userState,csi: userInfo.csi)
         

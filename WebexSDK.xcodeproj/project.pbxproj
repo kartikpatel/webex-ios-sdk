@@ -159,6 +159,10 @@
 		C7DAC2F22136538000782338 /* MultiStreamObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7DAC2F12136538000782338 /* MultiStreamObserver.swift */; };
 		D4E203C8CEBFF13EE1120FF8 /* Pods_WebexBroadcastExtensionKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB676BF6AEAF9B6DEEE3180A /* Pods_WebexBroadcastExtensionKit.framework */; };
 		E35305C10FED39CF42E37DD4 /* Pods_WebexBroadcastExtensionKitTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B853CF3F28B8FF8D3908761 /* Pods_WebexBroadcastExtensionKitTests.framework */; };
+		E5C405F2247DB3260018805A /* wbxaecodec.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 842C37D72421FD160081C863 /* wbxaecodec.framework */; };
+		E5C405F3247DB3290018805A /* wbxaudioengine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 842C37DB2421FD180081C863 /* wbxaudioengine.framework */; };
+		E5C405F4247DB3330018805A /* wbxaudioengine.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 842C37DB2421FD180081C863 /* wbxaudioengine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E5C405F5247DB3330018805A /* wbxaecodec.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 842C37D72421FD160081C863 /* wbxaecodec.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		ED9BF35EED0E4D4D3DF6B682 /* Pods_WebexSDKTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3BE0605A020EB70555237707 /* Pods_WebexSDKTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -189,6 +193,8 @@
 				107C538520889DA000717C42 /* Seu.framework in CopyFiles */,
 				107C538620889DA000717C42 /* Sbu.framework in CopyFiles */,
 				101255982022C3D80072F5DC /* Wme.framework in CopyFiles */,
+				E5C405F4247DB3330018805A /* wbxaudioengine.framework in CopyFiles */,
+				E5C405F5247DB3330018805A /* wbxaecodec.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,6 +373,8 @@
 			files = (
 				107C538720889DF500717C42 /* Seu.framework in Frameworks */,
 				1012559A2022C3E80072F5DC /* Wme.framework in Frameworks */,
+				E5C405F2247DB3260018805A /* wbxaecodec.framework in Frameworks */,
+				E5C405F3247DB3290018805A /* wbxaudioengine.framework in Frameworks */,
 				3D15B7101D3E176C003BB682 /* WebexSDK.framework in Frameworks */,
 				ED9BF35EED0E4D4D3DF6B682 /* Pods_WebexSDKTests.framework in Frameworks */,
 			);

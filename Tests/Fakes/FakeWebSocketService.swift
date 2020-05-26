@@ -36,7 +36,7 @@ class FakeWebSocketService:WebSocketService {
         
     }
     
-    override func websocketDidReceiveMessage(socket: WebSocket, text: String, response: WebSocket.WSResponse) {
+    override func websocketDidReceiveMessage(_ text: String) {
         if let call = self.callModel {
             self.onEvent?(MercuryEvent.recvCall(call))
         }

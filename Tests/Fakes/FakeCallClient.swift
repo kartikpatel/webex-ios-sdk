@@ -39,7 +39,7 @@ class FakeCallClient: CallClient {
         super.init(authenticator: authenticator)
     }
     
-    override func create(_ toAddress: String, by device: Device, localMedia: MediaModel, queue: DispatchQueue, completionHandler: @escaping (ServiceResponse<CallModel>) -> Void) {
+    override func create(_ toAddress: String, moderator:Bool? = false, PIN:String? = nil, by device: Device, localMedia: MediaModel, layout: MediaOption.VideoLayout?, queue: DispatchQueue, completionHandler: @escaping (ServiceResponse<CallModel>) -> Void) {
         if enableServerReturnError {
             let error = WebexError.serviceFailed(code: -7000, reason: "create call error")
             completionHandler(ServiceResponse(HTTPURLResponse(url: URL(string: "www.aaa.com")!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type":"application/json;charset=UTF-8"]), Result.failure(error)))
@@ -90,7 +90,7 @@ class FakeCallClient: CallClient {
         }
     }
     
-    override func join(_ callUrl: String, by device: Device, localMedia: MediaModel, queue: DispatchQueue, completionHandler: @escaping (ServiceResponse<CallModel>) -> Void) {
+    override func join(_ callUrl: String, by device: Device, localMedia: MediaModel, layout: MediaOption.VideoLayout?, queue: DispatchQueue, completionHandler: @escaping (ServiceResponse<CallModel>) -> Void) {
         if enableServerReturnError {
             let error = WebexError.serviceFailed(code: -7000, reason: "create call error")
             completionHandler(ServiceResponse(HTTPURLResponse(url: URL(string: "www.aaa.com")!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type":"application/json;charset=UTF-8"]), Result.failure(error)))
