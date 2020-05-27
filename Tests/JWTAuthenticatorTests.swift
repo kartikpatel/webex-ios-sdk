@@ -31,15 +31,18 @@ fileprivate class MockJWTStorage: JWTAuthStorage {
 
 fileprivate class MockJWTClient: JWTAuthClient {
     var fetchTokenFromJWT_callCount = 0
-    var fetchTokenFromJWT_completionHandler: ((ServiceResponse<JWTTokenModel>) -> Void)?
+    var fetchTokenFromJWT_completionHandler_response: ServiceResponse<JWTTokenModel>?
     
     override init() {
         
     }
     
     override func fetchTokenFromJWT(_ jwt: String, queue: DispatchQueue? = nil, completionHandler: @escaping (ServiceResponse<JWTTokenModel>) -> Void) {
-        fetchTokenFromJWT_completionHandler = completionHandler
         fetchTokenFromJWT_callCount += 1
+        
+        if let response = fetchTokenFromJWT_completionHandler_response {
+            completionHandler(response)
+        }
     }
 }
 
@@ -99,21 +102,20 @@ class JWTAuthenticatorTests: XCTestCase {
         let testObject = createTestObject()
         
         storage.authenticationInfo = JWTAuthenticationInfo(accessToken: "accessToken1", accessTokenExpirationDate: yesterday)
-        var count = 0
-        var retrievedAccessToken: String? = nil
+        let response = accessTokenResponse(accessToken: "accessToken2")
+        client.fetchTokenFromJWT_completionHandler_response = response
+        
+        let expect = expectation(description: "access token")
         testObject.accessToken() { accessToken in
-            retrievedAccessToken = accessToken
-            count = count + 1
+            XCTAssertEqual(accessToken, "accessToken2")
+            expect.fulfill()
         }
-        XCTAssertEqual(count, 0)
+        
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
+        }
         
         XCTAssertEqual(client.fetchTokenFromJWT_callCount, 1)
-        
-        let response = accessTokenResponse(accessToken: "accessToken2")
-        client.fetchTokenFromJWT_completionHandler?(response)
-        
-        XCTAssertEqual(retrievedAccessToken, "accessToken2")
-        XCTAssertEqual(count, 1)
         
         let authInfo = storage.authenticationInfo
         XCTAssertEqual(authInfo?.accessToken, "accessToken2")
@@ -124,38 +126,40 @@ class JWTAuthenticatorTests: XCTestCase {
         let testObject = createTestObject(jwt: jwtWithoutExpiration)
         XCTAssertTrue(testObject.authorized)
         
-        var count = 0
-        var retrievedAccessToken: String? = nil
+        let response = accessTokenResponse(accessToken: "accessToken1")
+        client.fetchTokenFromJWT_completionHandler_response = response
+        
+        let expect = expectation(description: "access token")
         testObject.accessToken() { accessToken in
-            retrievedAccessToken = accessToken
-            count = count + 1
+            XCTAssertEqual(accessToken, "accessToken1")
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
         }
         
         XCTAssertEqual(client.fetchTokenFromJWT_callCount, 1)
-        
-        let response = accessTokenResponse(accessToken: "accessToken1")
-        client.fetchTokenFromJWT_completionHandler?(response)
-        
-        XCTAssertEqual(retrievedAccessToken, "accessToken1")
-        XCTAssertEqual(count, 1)
     }
     
     func testWhenAccessTokenFetchFailsThenDeauthorized() {
         let testObject = createTestObject()
         
         storage.authenticationInfo = JWTAuthenticationInfo(accessToken: "accessToken1", accessTokenExpirationDate: yesterday)
-        var count = 0
-        var retrievedAccessToken: String? = nil
+        let response = ServiceResponse<JWTTokenModel>(nil, Result.failure(WebexError.illegalStatus(reason: "Fetch fails test")))
+        client.fetchTokenFromJWT_completionHandler_response = response
+        
+        let expect = expectation(description: "access token")
         testObject.accessToken() { accessToken in
-            retrievedAccessToken = accessToken
-            count = count + 1
+            XCTAssertEqual(accessToken, nil)
+            expect.fulfill()
         }
         
-        client.fetchTokenFromJWT_completionHandler?(ServiceResponse<JWTTokenModel>(nil, Result.failure(WebexError.illegalStatus(reason: "Fetch fails test"))))
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
+        }
         
-        XCTAssertEqual(retrievedAccessToken, nil)
         XCTAssertNil(storage.authenticationInfo)
-        XCTAssertEqual(count, 1)
     }
     
     func testWhenDeauthorizedThenAuthInfoIsCleared() {
@@ -169,25 +173,25 @@ class JWTAuthenticatorTests: XCTestCase {
     }
     
     func testWhenANewJwtIsSetThenANewAccessTokenIsRetrieved() {
-        storage.authenticationInfo = JWTAuthenticationInfo(accessToken: "accessToken1", accessTokenExpirationDate: tomorrow)
         let testObject = createTestObject()
+        
+        storage.authenticationInfo = JWTAuthenticationInfo(accessToken: "accessToken1", accessTokenExpirationDate: tomorrow)
+        let response = accessTokenResponse(accessToken: "accessToken2")
+        client.fetchTokenFromJWT_completionHandler_response = response
         
         testObject.authorizedWith(jwt: jwtWithoutExpiration)
         
         XCTAssertEqual(storage.jwt, jwtWithoutExpiration)
         
-        var count = 0
-        var retrievedAccessToken: String? = nil
+        let expect = expectation(description: "access token")
         testObject.accessToken() { accessToken in
-            retrievedAccessToken = accessToken
-            count = count + 1
+            XCTAssertEqual(accessToken, "accessToken2")
+            expect.fulfill()
         }
-        XCTAssertEqual(count, 0)
         
-        client.fetchTokenFromJWT_completionHandler?(accessTokenResponse(accessToken: "accessToken2"))
-        
-        XCTAssertEqual(retrievedAccessToken, "accessToken2")
-        XCTAssertEqual(count, 1)
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
+        }
     }
     
     func testWhenANewJwtIsSetButHasIncorrectSegmentsThenJwtIsNotAuthorized() {
@@ -210,37 +214,54 @@ class JWTAuthenticatorTests: XCTestCase {
     
     func testWhenRequestTokenTwiceThenCallServiceOnceAndCallsBothCompletionHandlersWithTheResult() {
         let testObject = createTestObject()
-        var tokenOne: String? = nil
-        var tokenTwo: String? = nil
         
+        let response = accessTokenResponse(accessToken: "accessToken1")
+        client.fetchTokenFromJWT_completionHandler_response = response
+        
+        let expect1 = expectation(description: "access token")
         testObject.accessToken() { accessToken in
-            tokenOne = accessToken
+            XCTAssertEqual(accessToken, "accessToken1")
+            expect1.fulfill()
         }
+        
+        let expect2 = expectation(description: "access token")
         testObject.accessToken() { accessToken in
-            tokenTwo = accessToken
+            XCTAssertEqual(accessToken, "accessToken1")
+            expect2.fulfill()
         }
-        client.fetchTokenFromJWT_completionHandler?(accessTokenResponse(accessToken: "accessToken1"))
+        
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
+        }
         
         XCTAssertEqual(client.fetchTokenFromJWT_callCount, 1)
-        XCTAssertEqual(tokenOne, "accessToken1")
-        XCTAssertEqual(tokenTwo, "accessToken1")
     }
     
     func testGivenWeHaveAlreadyReceivedAnAccessTokenWhenWeAskForAnotherThenTheFirstHandlerIsNotCalledAgain() {
         let testObject = createTestObject()
+        
+        let response = accessTokenResponse(accessToken: "accessToken1")
+        client.fetchTokenFromJWT_completionHandler_response = response
+        
         var tokenOneCount = 0
         var tokenTwoCount = 0
         
-        testObject.accessToken() { accessToken in
+        let expect1 = expectation(description: "access token")
+        testObject.accessToken() { _ in
             tokenOneCount += 1
+            expect1.fulfill()
         }
-        client.fetchTokenFromJWT_completionHandler?(accessTokenResponse(accessToken: "accessToken1"))
         
         testObject.authorizedWith(jwt: jwtWithoutExpiration)
-        testObject.accessToken() { accessToken in
+        let expect2 = expectation(description: "access token")
+        testObject.accessToken() { _ in
             tokenTwoCount += 1
+            expect2.fulfill()
         }
-        client.fetchTokenFromJWT_completionHandler?(accessTokenResponse(accessToken: "accessToken1"))
+        
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
+        }
         
         XCTAssertEqual(tokenOneCount, 1)
         XCTAssertEqual(tokenTwoCount, 1)
