@@ -67,28 +67,32 @@ class JWTAuthenticatorTests: XCTestCase {
         
         storage.authenticationInfo = JWTAuthenticationInfo(accessToken: "accessToken1", accessTokenExpirationDate: tomorrow)
         
-        var retrievedAccessToken: String? = nil
+        let expect = expectation(description: "access token")
         testObject.accessToken() { accessToken in
-            retrievedAccessToken = accessToken
+            XCTAssertEqual(accessToken, "accessToken1")
+            expect.fulfill()
         }
         
-        XCTAssertEqual(retrievedAccessToken, "accessToken1")
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
+        }
     }
     
     func testWhenAccessTokenExistsAndJWTIsExpiredThenNilIsImmediatelyReturnedForAccessToken() {
         let testObject = createTestObject(jwt: expiredTestJWT)
         
         storage.authenticationInfo = JWTAuthenticationInfo(accessToken: "accessToken1", accessTokenExpirationDate: yesterday)
-        var count = 0
-        var retrievedAccessToken: String? = nil
-        testObject.accessToken() { accessToken in
-            retrievedAccessToken = accessToken
-            count = count + 1
+        
+        let expect = expectation(description: "access token")
+        testObject.accessToken() { [unowned self] accessToken in
+            XCTAssertNil(accessToken)
+            XCTAssertEqual(self.client.fetchTokenFromJWT_callCount, 0)
+            expect.fulfill()
         }
         
-        XCTAssertEqual(count, 1)
-        XCTAssertNil(retrievedAccessToken)
-        XCTAssertEqual(client.fetchTokenFromJWT_callCount, 0)
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "access token time out")
+        }
     }
     
     func testWhenAccessTokenExpiredButJWTIsValidThenAccessTokenIsRefreshed() {
